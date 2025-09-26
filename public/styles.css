@@ -4,3 +4,12 @@ header{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 input{padding:8px;border:1px solid #ccc;border-radius:8px}
 button{padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer}
 canvas{width:100%;background:#fafafa;border:1px solid #eee;border-radius:12px}
+.card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px;margin:12px 0}
+.card h2{margin:0 0 8px;font-size:1.1rem}
+.small{font-size:.9rem;color:#666}
+#msg{margin:8px 0;min-height:1.2em;color:#b00020}
+#helpBtn{
+  position:fixed;right:16px;bottom:16px;width:44px;height:44px;
+  border-radius:50%;border:0;cursor:pointer;background:#111;color:#fff;font-weight:700
+}
+.hidden{display:none}
