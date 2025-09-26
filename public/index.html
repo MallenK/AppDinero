@@ -14,6 +14,25 @@
     <button id="btn">Añadir</button>
   </header>
 
+  <section id="howto" class="card">
+  <h2>Cómo usar</h2>
+  <ol>
+    <li>Escribe un símbolo bursátil. Ej.: <code>AAPL</code>, <code>MSFT</code>, <code>GOOGL</code>, <code>TSLA</code>.</li>
+    <li>Pulsa <strong>Añadir</strong> o Enter.</li>
+    <li>Arriba verás el precio y la moneda. Abajo el histórico.</li>
+  </ol>
+  <p class="small">
+    Consejos: 1) Evita repetir consultas en menos de 60 s.
+    2) Para crypto, usa símbolos soportados por Alpha Vantage en otro endpoint.
+    3) Si no carga, inténtalo en un minuto.
+  </p>
+</section>
+
+<div id="msg" role="status" aria-live="polite"></div>
+
+<button id="helpBtn" aria-label="Ayuda">?</button>
+
+
   <section id="summary">
     <div><strong>Precio:</strong> <span id="price">—</span></div>
     <div><strong>Moneda:</strong> <span id="ccy">—</span></div>
