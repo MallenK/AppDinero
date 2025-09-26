@@ -1,0 +1,6 @@
+body{font-family:system-ui,Arial,sans-serif;max-width:900px;margin:0 auto;padding:16px}
+header{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#summary{display:flex;gap:24px;margin:12px 0}
+input{padding:8px;border:1px solid #ccc;border-radius:8px}
+button{padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer}
+canvas{width:100%;background:#fafafa;border:1px solid #eee;border-radius:12px}
