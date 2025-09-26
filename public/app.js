@@ -22,39 +22,54 @@ async function getQuote(symbol){
   return r.json();
 }
 async function getDaily(symbol){
-  console.log("symbolsymbolsymbolsymbol: ",symbol);
-  const r = await fetch(`${API_BASE}/history?symbol=${encodeURIComponent(symbol)}&size=compact`);
-  if(!r.ok) throw new Error('Error de red');
-  const j = await r.json();
-
-  // 1) Límite o error del proveedor
-  if (j['Note'] || j['Error Message']) {
-    throw new Error(j['Note'] || 'Símbolo no válido o límite temporal alcanzado');
-  }
-  // 2) Serie diaria
-  const ts = j['Time Series (Daily)'];
-  if (!ts || typeof ts !== 'object') {
-    throw new Error('Histórico no disponible ahora. Inténtalo en 1-2 min');
+  const url = `${API_BASE}/history?symbol=${encodeURIComponent(symbol)}&size=compact`;
+  console.debug('[history] GET', url);
+  const r = await fetch(url);
+  const text = await r.text();
+  console.debug('[history] raw', text.slice(0, 400));
+  let j;
+  try { j = JSON.parse(text); } catch (e) {
+    console.error('[history] JSON parse error', e);
+    throw new Error('Respuesta inválida del proveedor');
   }
 
-  // 3) Normaliza: fechas ascendentes y cierre
-  const days = Object.keys(ts).sort();               // más antiguo → más nuevo
-  const points = days.map(d => {
-    const row = ts[d] || {};
-    const v = Number(row['5. adjusted close'] ?? row['4. close']);
-    return Number.isFinite(v) ? v : null;
-  });
+  // Mensajes de proveedor
+  if (j['Note']) { console.warn('[history] Note', j['Note']); throw new Error('Límite de peticiones. Prueba en 60–90 s'); }
+  if (j['Information']) { console.warn('[history] Information', j['Information']); throw new Error('Proveedor congestionado. Reintenta luego'); }
+  if (j['Error Message']) { console.warn('[history] Error Message', j['Error Message']); throw new Error('Símbolo no válido'); }
 
-  // 4) Filtra nulos
+  // Claves posibles
+  const ts = j['Time Series (Daily)'] || j['Time Series (Daily) '] || j['Daily Time Series'];
+  if (!ts || typeof ts !== 'object' || !Object.keys(ts).length) {
+    console.error('[history] serie vacía. Claves disponibles:', Object.keys(j));
+    throw new Error('Histórico no disponible ahora. Inténtalo en 1–2 min');
+  }
+
+  const days = Object.keys(ts).sort(); // asc
   const labels = [];
   const data = [];
-  for (let i = 0; i < days.length; i++) {
-    if (points[i] != null) { labels.push(days[i]); data.push(points[i]); }
+  for (const d of days) {
+    const row = ts[d] || {};
+    const v = Number(row['5. adjusted close'] ?? row['4. close']);
+    if (Number.isFinite(v)) { labels.push(d); data.push(v); }
   }
-  if (data.length < 2) throw new Error('Sin suficientes puntos para graficar');
-
+  if (data.length < 2) {
+    console.warn('[history] pocos puntos', { points: data.length });
+    throw new Error('Sin suficientes puntos para graficar');
+  }
+  console.debug('[history] points', data.length);
   return { labels, data };
 }
+
+// En loadSymbol, dibuja así:
+const { labels, data } = await getDaily(s);
+if (chart) chart.destroy();
+chart = new Chart(ctx, {
+  type: 'line',
+  data: { labels, datasets: [{ label: s, data }] },
+  options: { responsive: true, interaction:{mode:'index', intersect:false}, plugins:{legend:{display:false}}, parsing:false }
+});
+
 
 
 async function loadSymbol(s){
