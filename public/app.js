@@ -22,6 +22,7 @@ async function getQuote(symbol){
   return r.json();
 }
 async function getDaily(symbol){
+  console.log("symbolsymbolsymbolsymbol: ",symbol);
   const r = await fetch(`${API_BASE}/history?symbol=${encodeURIComponent(symbol)}&size=compact`);
   if(!r.ok) throw new Error('Error de red');
   const j = await r.json();
