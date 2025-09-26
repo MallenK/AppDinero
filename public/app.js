@@ -71,7 +71,6 @@ async function loadSymbol(s){
     // Histórico
     const h = await getDaily(s);
     const ts = h['Time Series (Daily)'] || {};
-    const labels = Object.keys(ts).sort();
     const close = labels.map(d => Number(ts[d]['5. adjusted close'] || ts[d]['4. close']));
 
     // Histórico normalizado
