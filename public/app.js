@@ -24,8 +24,37 @@ async function getQuote(symbol){
 async function getDaily(symbol){
   const r = await fetch(`${API_BASE}/history?symbol=${encodeURIComponent(symbol)}&size=compact`);
   if(!r.ok) throw new Error('Error de red');
-  return r.json();
+  const j = await r.json();
+
+  // 1) Límite o error del proveedor
+  if (j['Note'] || j['Error Message']) {
+    throw new Error(j['Note'] || 'Símbolo no válido o límite temporal alcanzado');
+  }
+  // 2) Serie diaria
+  const ts = j['Time Series (Daily)'];
+  if (!ts || typeof ts !== 'object') {
+    throw new Error('Histórico no disponible ahora. Inténtalo en 1-2 min');
+  }
+
+  // 3) Normaliza: fechas ascendentes y cierre
+  const days = Object.keys(ts).sort();               // más antiguo → más nuevo
+  const points = days.map(d => {
+    const row = ts[d] || {};
+    const v = Number(row['5. adjusted close'] ?? row['4. close']);
+    return Number.isFinite(v) ? v : null;
+  });
+
+  // 4) Filtra nulos
+  const labels = [];
+  const data = [];
+  for (let i = 0; i < days.length; i++) {
+    if (points[i] != null) { labels.push(days[i]); data.push(points[i]); }
+  }
+  if (data.length < 2) throw new Error('Sin suficientes puntos para graficar');
+
+  return { labels, data };
 }
+
 
 async function loadSymbol(s){
   try{
@@ -45,12 +74,21 @@ async function loadSymbol(s){
     const labels = Object.keys(ts).sort();
     const close = labels.map(d => Number(ts[d]['5. adjusted close'] || ts[d]['4. close']));
 
-    if(chart) chart.destroy();
+    // Histórico normalizado
+    const { labels, data } = await getDaily(s);
+    
+    if (chart) chart.destroy();
     chart = new Chart(ctx, {
       type: 'line',
-      data: { labels, datasets: [{ label: s, data: close }] },
-      options: { responsive: true, interaction:{mode:'index', intersect:false}, plugins:{legend:{display:false}} }
+      data: { labels, datasets: [{ label: s, data }] },
+      options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: false } },
+        parsing: false
+      }
     });
+
 
     localStorage.setItem('lastSymbol', s);
     clearMsg();
